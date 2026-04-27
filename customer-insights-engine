@@ -1,0 +1,29 @@
+import streamlit as st
+import pandas as pd
+from sklearn.cluster import KMeans
+import plotly.express as px
+
+st.set_page_config(page_title="Customer Segmentation", layout="wide")
+
+df = pd.read_csv("data.csv")
+
+st.title("Customer Segmentation Dashboard")
+
+features = df[["Annual Income", "Spending Score"]]
+
+k = st.sidebar.slider("Number of Clusters", 2, 6, 3)
+
+model = KMeans(n_clusters=k, random_state=42)
+df["Cluster"] = model.fit_predict(features)
+
+col1, col2 = st.columns(2)
+
+fig1 = px.scatter(df, x="Annual Income", y="Spending Score", color=df["Cluster"].astype(str), title="Customer Segments")
+col1.plotly_chart(fig1, use_container_width=True)
+
+cluster_summary = df.groupby("Cluster").mean(numeric_only=True).reset_index()
+fig2 = px.bar(cluster_summary, x="Cluster", y="Spending Score", title="Avg Spending Score by Cluster")
+col2.plotly_chart(fig2, use_container_width=True)
+
+st.subheader("Segment Insights")
+st.dataframe(cluster_summary)
